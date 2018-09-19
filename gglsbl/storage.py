@@ -149,6 +149,22 @@ class SqliteStorage(object):
             )
         self.db.commit()
 
+    def get_random_hash(self):
+        "Query DB to see if hash is blacklisted"
+        q = '''SELECT value FROM full_hash ORDER BY RANDOM() LIMIT 1'''
+        output = []
+        log.debug('get_random_hash...')
+        with self.get_cursor() as dbc:
+            dbc.execute(q)
+            fetchall = dbc.fetchall()
+            log.debug('Return type of the query is: %s' % str(type(fetchall)))
+            for h in fetchall:
+                log.debug('Type of query element is: %s' % str(type(h)))
+                hash = h[0]
+                log.debug('Type of query hash element is: %s' % str(type(hash)))
+                output.append(hash)
+        return output
+
     def lookup_full_hashes(self, hash_values):
         "Query DB to see if hash is blacklisted"
         q = '''SELECT threat_type,platform_type,threat_entry_type, expires_at < current_timestamp AS has_expired

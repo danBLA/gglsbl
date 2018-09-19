@@ -133,6 +133,23 @@ class SafeBrowsingList(object):
         if not url.strip():
             raise ValueError("Empty input string.")
         url_hashes = URL(url).hashes
+        url_hashes = URL(url).hashes
+        try:
+            list_names = self._lookup_hashes(url_hashes)
+            self.storage.commit()
+        except:
+            self.storage.rollback()
+            raise
+        if list_names:
+            return list_names
+        return None
+
+    def lookup_random_hash(self):
+        """Look up random URL in Safe Browsing threat lists."""
+
+        url_hashes = self.storage.get_random_hash()
+        url_hashes = [str(a) for a in url_hashes]
+        log.debug("lookup_random_hash -> hash: %s" % (",".join([str(a) for a in url_hashes])))
         try:
             list_names = self._lookup_hashes(url_hashes)
             self.storage.commit()
