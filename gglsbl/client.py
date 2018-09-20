@@ -117,7 +117,7 @@ class SafeBrowsingList(object):
                         malware_threat_type = v
                 self.storage.store_full_hash(threat_list, hash_value, cache_duration, malware_threat_type)
         except KeyError as e:
-            log.error("Error in fh_response: %s" % str(e))
+            log.error("Error in accessing fh_response: %s\nValid keys: %s" % (str(e), ", ".join(fh_response.keys())))
             log.exception(e)
             pass
 
