@@ -38,6 +38,10 @@ def setupArgsParser():
                 default=False,
                 action = 'store_true',
                 help='Show debug output')
+    parser.add_argument('--random-hash',
+                default=False,
+                action = 'store_true',
+                help='Check a random URL hash from database')
     parser.add_argument('--onetime',
                 default=False,
                 action = 'store_true',
@@ -56,6 +60,15 @@ def setupLogger(log_file, debug):
     lh.setFormatter(formatter)
     log = logging.getLogger('gglsbl')
     log.addHandler(lh)
+    log.propagate=False
+
+    if debug:
+        root = logging.getLogger()
+        handler = logging.StreamHandler(sys.stdout)
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        root.addHandler(handler)
 
 def run_sync(sbl):
     try:
@@ -71,6 +84,14 @@ def main():
     args_parser = setupArgsParser()
     args = args_parser.parse_args()
     setupLogger(args.log, args.debug)
+    if args.random_hash:
+        sbl = SafeBrowsingList(args.api_key, db_path=args.db_path, timeout=args.timeout)
+        bl = sbl.lookup_random_hash()
+        if bl is None:
+            print('{} is not blacklisted'.format(args.check_url))
+        else:
+            print('{} is blacklisted in {}'.format(args.check_url, bl))
+        sys.exit(0)
     if args.check_url:
         sbl = SafeBrowsingList(args.api_key, db_path=args.db_path, timeout=args.timeout)
         bl = sbl.lookup_url(args.check_url)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from base64 import b64decode
+from base64 import b64decode, b64encode
 
 import logging
 log = logging.getLogger('gglsbl')
@@ -116,14 +116,18 @@ class SafeBrowsingList(object):
                     if k == 'malware_threat_type':
                         malware_threat_type = v
                 self.storage.store_full_hash(threat_list, hash_value, cache_duration, malware_threat_type)
-        except KeyError:
+        except KeyError as e:
+            log.error("Error in fh_response: %s" % str(e))
+            log.exception(e)
             pass
 
         try:
             negative_cache_duration = int(fh_response['negativeCacheDuration'].rstrip('s'))
             for prefix_value in hash_prefixes:
                 self.storage.update_hash_prefix_expiration(prefix_value, negative_cache_duration)
-        except KeyError:
+        except KeyError as e:
+            log.error("Error in negative_cache_duration: %s" % str(e))
+            log.exception(e)
             pass
 
     def lookup_url(self, url):
@@ -150,6 +154,8 @@ class SafeBrowsingList(object):
         url_hashes = self.storage.get_random_hash()
         url_hashes = [str(a) for a in url_hashes]
         log.debug("lookup_random_hash -> hash: %s" % (",".join([str(a) for a in url_hashes])))
+        log.debug("lookup_random_hash -> hash (b64-encoded): %s" % (",".join([b64encode(a).decode() for a in url_hashes])))
+        log.debug("lookup_random_hash -> hash (hex): %s" % (",".join([to_hex(a) for a in url_hashes])))
         try:
             list_names = self._lookup_hashes(url_hashes)
             self.storage.commit()
